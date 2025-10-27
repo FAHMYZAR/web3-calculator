@@ -1,37 +1,762 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fast P2P Chat</title>
+  <title>MATRIX CHAT - Decentralized P2P</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gun/gun.min.js"></script>
-  <link rel="icon" href="https://img.icons8.com/color/48/000000/chat.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bg-dark: #000000;
+      --bg-panel: #0a0e0a;
+      --bg-card: #0f1410;
+      --border: #00ff41;
+      --text-primary: #00ff41;
+      --text-secondary: #00aa2b;
+      --text-dim: #006622;
+      --accent: #00ff41;
+      --glow: rgba(0, 255, 65, 0.5);
+    }
+    
+    body {
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+    }
+    
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.3;
+    }
+    
+    .container {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Login Box */
+    #loginBox {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .login-card {
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      border-radius: 0;
+      padding: 40px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 0 30px var(--glow), inset 0 0 30px rgba(0, 255, 65, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, transparent, var(--border), transparent);
+      z-index: -1;
+      animation: borderRotate 3s linear infinite;
+    }
+    
+    @keyframes borderRotate {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+    
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 42px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px var(--glow);
+      letter-spacing: 3px;
+    }
+    
+    .matrix-text {
+      color: var(--text-primary);
+      text-shadow: 0 0 10px var(--glow);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+    
+    .form-control {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 15px;
+      font-family: 'Share Tech Mono', monospace;
+      border-radius: 0;
+      transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+      background: var(--bg-panel);
+      border-color: var(--accent);
+      color: var(--text-primary);
+      box-shadow: 0 0 15px var(--glow);
+      outline: none;
+    }
+    
+    .form-control::placeholder {
+      color: var(--text-dim);
+    }
+    
+    .btn {
+      padding: 15px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn:hover::before {
+      left: 100%;
+    }
+    
+    .btn:hover {
+      background: var(--border);
+      color: var(--bg-dark);
+      box-shadow: 0 0 20px var(--glow);
+      transform: translateY(-2px);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn.connected {
+      background: var(--border);
+      color: var(--bg-dark);
+    }
+    
+    /* Chat Box */
+    #chatBox {
+      display: none;
+      height: 100vh;
+      padding: 20px;
+      gap: 20px;
+    }
+    
+    .chat-container {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      height: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    
+    .sidebar {
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px var(--glow);
+    }
+    
+    .sidebar-header {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .online-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin-bottom: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--text-dim);
+      transition: all 0.3s;
+    }
+    
+    .online-user:hover {
+      border-color: var(--border);
+      box-shadow: 0 0 10px var(--glow);
+    }
+    
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--border);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--glow);
+      animation: pulse 2s infinite;
+    }
+    
+    .main-chat {
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px var(--glow);
+    }
+    
+    .chat-header {
+      padding: 20px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+    }
+    
+    .chat-header h5 {
+      margin: 0;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 2px;
+    }
+    
+    #userAddr {
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: var(--bg-dark);
+      padding: 5px 15px;
+      border: 1px solid var(--border);
+    }
+    
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: var(--bg-dark);
+    }
+    
+    #messages::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    #messages::-webkit-scrollbar-track {
+      background: var(--bg-card);
+    }
+    
+    #messages::-webkit-scrollbar-thumb {
+      background: var(--border);
+      box-shadow: 0 0 5px var(--glow);
+    }
+    
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 75%;
+      animation: messageSlide 0.3s ease-out;
+    }
+    
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message-self {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    
+    .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 0;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: var(--bg-dark);
+      font-size: 16px;
+      box-shadow: 0 0 10px var(--glow);
+    }
+    
+    .msg-content {
+      background: var(--bg-card);
+      border: 1px solid var(--text-dim);
+      padding: 12px 16px;
+      position: relative;
+      flex: 1;
+      transition: all 0.3s;
+    }
+    
+    .msg-content:hover {
+      border-color: var(--border);
+      box-shadow: 0 0 15px var(--glow);
+    }
+    
+    .message-self .msg-content {
+      background: var(--bg-panel);
+      border-color: var(--border);
+    }
+    
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    
+    .msg-from {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .msg-time {
+      color: var(--text-dim);
+    }
+    
+    .msg-text {
+      word-wrap: break-word;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+    
+    .msg-text a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    
+    .reply-preview {
+      background: var(--bg-dark);
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      border-left: 3px solid var(--border);
+      color: var(--text-secondary);
+    }
+    
+    .msg-image {
+      max-width: 350px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .msg-image:hover {
+      box-shadow: 0 0 20px var(--glow);
+      transform: scale(1.02);
+    }
+    
+    .file-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    
+    .file-link:hover {
+      box-shadow: 0 0 15px var(--glow);
+      color: var(--accent);
+    }
+    
+    .reactions {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .reaction {
+      background: var(--bg-dark);
+      padding: 5px 10px;
+      border: 1px solid var(--text-dim);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .reaction:hover {
+      border-color: var(--border);
+      box-shadow: 0 0 10px var(--glow);
+      transform: scale(1.1);
+    }
+    
+    .msg-actions {
+      display: none;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .msg-content:hover .msg-actions {
+      display: flex;
+    }
+    
+    .action-btn {
+      background: var(--bg-dark);
+      border: 1px solid var(--text-dim);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    
+    .action-btn:hover {
+      border-color: var(--border);
+      box-shadow: 0 0 10px var(--glow);
+    }
+    
+    .action-btn.delete:hover {
+      border-color: #ff0000;
+      color: #ff0000;
+    }
+    
+    #typingArea {
+      min-height: 30px;
+      padding: 5px 20px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      background: var(--bg-card);
+    }
+    
+    .typing-indicator {
+      animation: fadeIn 0.3s;
+    }
+    
+    .dots {
+      animation: blink 1.5s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    .chat-input {
+      padding: 20px;
+      border-top: 2px solid var(--border);
+      background: var(--bg-card);
+    }
+    
+    .reply-indicator {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    
+    .input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .input-wrapper .form-control {
+      flex: 1;
+      padding: 12px;
+    }
+    
+    .input-wrapper button {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 18px;
+    }
+    
+    /* Emoji Picker */
+    .emoji-picker {
+      position: fixed;
+      bottom: 100px;
+      right: 50%;
+      transform: translateX(50%) scale(0);
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      padding: 20px;
+      box-shadow: 0 0 30px var(--glow);
+      z-index: 9999;
+      transition: transform 0.3s;
+    }
+    
+    .emoji-picker.show {
+      transform: translateX(50%) scale(1);
+    }
+    
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    
+    .emoji-item {
+      font-size: 32px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      padding: 5px;
+    }
+    
+    .emoji-item:hover {
+      transform: scale(1.3);
+      filter: drop-shadow(0 0 10px var(--glow));
+    }
+    
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 9999;
+      box-shadow: 0 0 20px var(--glow);
+      transform: translateX(400px);
+      transition: transform 0.3s;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification i {
+      font-size: 20px;
+    }
+    
+    .notification.success {
+      border-color: #00ff41;
+    }
+    
+    .notification.error {
+      border-color: #ff0000;
+    }
+    
+    .notification.warning {
+      border-color: #ffaa00;
+    }
+    
+    /* Animations */
+    .fade-out {
+      animation: fadeOut 0.3s forwards;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s forwards;
+    }
+    
+    @keyframes fadeOut {
+      to { opacity: 0; transform: scale(0.95); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .deleting {
+      animation: deleteMsg 0.3s forwards;
+    }
+    
+    @keyframes deleteMsg {
+      to {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+    }
+    
+    .glitch-effect:hover {
+      animation: glitch 0.3s;
+    }
+    
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(2px, -2px); }
+      60% { transform: translate(-2px, -2px); }
+      80% { transform: translate(2px, 2px); }
+    }
+    
+    /* Modal */
+    .modal-content {
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      box-shadow: 0 0 40px var(--glow);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .chat-container {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        display: none;
+      }
+      .message {
+        max-width: 90%;
+      }
+    }
+  </style>
 </head>
-<body class="bg-dark text-light d-flex flex-column align-items-center justify-content-center vh-100">
-
-  <div id="loginBox" class="text-center">
-    <h3 class="mb-3"><img src="https://img.icons8.com/color/48/000000/chat.png" width="32"> Web3 Chat</h3>
-    <input id="roomInput" type="text" class="form-control mb-3" placeholder="Masukkan ID Room">
-    <button id="connectBtn" class="btn btn-info w-100">Connect Wallet</button>
-    <button id="joinBtn" class="btn btn-success w-100 mt-2" disabled>Masuk ke Room</button>
+<body>
+  <canvas id="particles"></canvas>
+  
+  <div id="loginBox">
+    <div class="login-card">
+      <div class="logo"><span class="matrix-text">WEB3</span>-CHAT</div>
+      <div class="subtitle">DECENTRALIZED P2P NETWORK</div>
+      <p class="subtitle" id="hackText" style="min-height: 20px;"></p>
+      
+      <input id="roomInput" type="text" class="form-control mb-3" placeholder="ENTER ROOM CODE">
+      
+      <button id="connectBtn" class="btn w-100 mb-3">
+        <i class="bi bi-shield-lock"></i> CONNECT WALLET
+      </button>
+      
+      <button id="joinBtn" class="btn w-100" disabled>
+        <i class="bi bi-arrow-right-circle"></i> ACCESS NETWORK
+      </button>
+    </div>
   </div>
-
-  <div id="chatBox" class="container" style="display:none;max-width:600px;">
-    <div class="card bg-secondary">
-      <div class="card-header d-flex justify-content-between">
-        <span id="roomName"></span>
-        <span id="userShort"></span>
+  
+  <div id="chatBox">
+    <div class="chat-container">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <i class="bi bi-broadcast"></i> NODES ONLINE: <span id="onlineCount">0</span>
+        </div>
+        <div id="onlineUsers"></div>
       </div>
-      <div id="messages" class="card-body overflow-auto" style="height:400px;"></div>
-      <div class="card-footer d-flex">
-        <input id="msgInput" class="form-control me-2" placeholder="Ketik pesan...">
-        <button id="sendBtn" class="btn btn-info"><img src="https://img.icons8.com/ios-filled/24/ffffff/filled-sent.png"/></button>
+      
+      <div class="main-chat">
+        <div class="chat-header">
+          <h5 id="roomName"></h5>
+          <span id="userAddr"></span>
+        </div>
+        
+        <div id="messages"></div>
+        
+        <div id="typingArea"></div>
+        
+        <div class="chat-input">
+          <div class="reply-indicator" id="replyIndicator">
+            <i class="bi bi-reply-fill"></i>
+            <span id="replyText"></span>
+            <button id="cancelReply" style="margin-left:auto;background:none;border:none;color:var(--text-primary);cursor:pointer;">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          
+          <input type="hidden" id="replyTo">
+          
+          <div class="input-wrapper">
+            <button id="fileBtn" class="btn" title="Upload">
+              <i class="bi bi-paperclip"></i>
+            </button>
+            <button id="emojiBtn" class="btn" title="Emoji">
+              <i class="bi bi-emoji-smile"></i>
+            </button>
+            <input id="msgInput" class="form-control" placeholder="TRANSMIT MESSAGE..." autocomplete="off">
+            <button id="sendBtn" class="btn" title="Send">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>
+          
+          <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.txt">
+        </div>
       </div>
     </div>
   </div>
-
-<script src="script.js"></script>
+  
+  <div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body text-center p-0">
+          <img id="modalImage" style="max-width:100%;border:2px solid var(--border);">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
