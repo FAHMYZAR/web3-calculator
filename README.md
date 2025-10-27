@@ -22,6 +22,5 @@ Didesain ringan, modern, dan mudah dikembangkan untuk integrasi chat-room berbas
 
 > Preview screenshot
 
-```bash
 ![Chat UI Preview](assets\ss2.png)
 ![Wallet Connected](assets\ss1.png)
