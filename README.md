@@ -1,27 +1,27 @@
-# web3-calculator — Web3 P2P Chat
+# 💬 Web3-Calculator – Real-Time Web3 Chat Interface  
 
-Singkat: sebuah demo chat P2P berbasis Gun (GUN.js) + Web3 wallet (MetaMask) — server relay ringan (RAM-only) dan client browser sederhana.
+MatrixChat adalah aplikasi **chat real-time berbasis Socket.IO** dengan tampilan bergaya **Matrix hacker UI** dan dukungan **Web3 wallet (MetaMask)**.  
+Didesain ringan, modern, dan mudah dikembangkan untuk integrasi chat-room berbasis blockchain atau komunitas crypto.
 
-## Fitur utama
-- Relay Gun ringan (radisk/localStorage dimatikan) untuk kecepatan.
-- Client web terhubung dengan MetaMask (hanya alamat wallet disimpan).
-- Room-based chat (ID room gratis).
-- Tidak menyimpan data persistensi pada server (RAM-only).
+---
 
-## Struktur proyek
-- server.js — Node.js relay Gun (HTTP server).
-- index.html — UI client.
-- script.js — logic client (connect wallet, join room, kirim/terima pesan).
-- package.json — dependensi & script start.
-- .gitignore — aturan file yang diabaikan.
+## 🚀 Fitur Utama
 
-## Prasyarat
-- Node.js (v18+ direkomendasikan)
-- npm
-- Browser dengan MetaMask (untuk demo wallet)
-- Jalankan pada jaringan lokal; sesuaikan IP peer di script.js jika perlu (default: 192.168.1.4)
+- ⚡ **Real-Time Communication** menggunakan [Socket.IO](https://socket.io/)
+- 🧩 **Integrasi Web3 Wallet (MetaMask)** untuk autentikasi pengguna  
+- 💾 **Persistensi Data Lokal** via `localStorage` (wallet & room)
+- 📎 **Dukungan Kirim File** (gambar, PDF, dll)
+- 💬 **Reply, Reaction, & Typing Indicator**
+- 🎨 **UI Animasi Bergaya Matrix Hacker** (dengan efek partikel & teks mengetik)
+- 🔊 **Sound Notification System**
+- 🔐 **Tanpa server-side storage sensitif** — hanya data session di browser
 
-## Instalasi & Jalankan (Windows / PowerShell)
-1. Install dependensi:
+---
+
+## 🖼️ Preview
+
+> Preview screenshot
+
 ```bash
-npm install
+![Chat UI Preview](assets\ss2.png)
+![Wallet Connected](assets\ss1.png)
